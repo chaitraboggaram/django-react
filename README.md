@@ -149,3 +149,46 @@ Visit: http://127.0.0.1:8000/
 
 ---
 
+## Create React Frontend App
+### Create React App Inside Django Project Folder
+```bash
+cd pde
+npx create-react-app frontend
+```
+
+### Install Axios for API calls
+```bash
+cd frontend
+npm install axios
+```
+
+### Update App code
+Update `pde/frontend/src/App.js`
+```js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+function App() {
+    const [msg, setMsg] = useState('');
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/api/data/')
+            .then(res => setMsg(res.data.message))
+            .catch(err => console.error(err));
+    }, []);
+
+    return (
+        <div>
+            <h1>React + Django</h1>
+            <p>{msg}</p>
+        </div>
+    );
+}
+
+export default App;
+```
+
+### Start the Frontend
+```bash
+npm start
+```

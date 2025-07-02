@@ -11,13 +11,11 @@ dist/
 build/
 .eggs/
 
-# Virtual Environment
-.newenv/
-newenv/
+# Virtual Environments
 .venv/
-env/
 venv/
 ENV/
+env/
 env.bak/
 venv.bak/
 
@@ -29,8 +27,20 @@ staticfiles/
 local_settings.py
 .env
 .env.*
-**/migrations/__pycache__/
 **/migrations/
+**/migrations/__pycache__/
+
+# React / Node.js
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.DS_Store
+frontend/.pnp/
+frontend/.pnp.js
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
 
 # VSCode / IDEs
 .vscode/
