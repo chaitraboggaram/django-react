@@ -38,7 +38,7 @@ source .venv/bin/activate
 
 ### 2. Install Required Packages
 ```bash
-pip install django
+pip install django djangorestframework django-cors-headers dotenv
 ```
 
 #### Save Dependencies
@@ -80,8 +80,18 @@ Open `pde/pde/settings.py` and add the newly created app to the `INSTALLED_APPS`
 ```py
 INSTALLED_APPS = [
 	...
-	"tvt",
+	'tvt',
+    'rest_framework',
+    'corsheaders',
 ]
+
+
+MIDDLEWARE = [
+    ...
+    'corsheaders.middleware.CorsMiddleware'
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
 ```
 
 <br>
@@ -94,7 +104,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-	path("", views.home, name="home"),
+    path("", views.get_data),
 ]
 ```
 
@@ -118,10 +128,13 @@ urlpatterns = [
 ### 5. Create Sample View to Print Hello World
 Update `pde/tvt/views.py`
 ```py
-from django.http import HttpResponse
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-def home(request):
-	return HttpResponse("Hello World!")
+@api_view(['GET'])
+def get_data(request):
+    return Response({'message': 'Hello from Django!'})
+
 ```
 
 <br>
