@@ -7,7 +7,7 @@
 2. [Create a Django Project and Application](#create-a-django-project-and-application)
 	2.1 [Create Django Project](#1-Create-Django-Project)
 	2.2 [Create Django App](#2-Create-Django-App)
-	2.3 [Register Django App](#3-Register-Django-App)
+	2.3 [Register Django App and enable CORS](#3-Register-Django-App-and-enable-CORS)
 	2.4 [Configure URL Routing](#4-Configure-URL-Routing)
 		2.4.1 [Configure Application-Level URLs](#Configure-Application-Level-URLs)
 		2.4.2 [Configure Application-Level URLs in Project URLs](#Configure-Application-Level-URLs-in-Project-URLs)
@@ -60,6 +60,12 @@ pip install --no-deps -r requirements.txt
 ---
 
 ## Create a Django Project and Application
+> Note: To Copy relative path
+Windows: Ctrl + k + ctrl + shift + c
+Mac: 
+
+<br>
+
 ### 1. Create Django Project
 ```bash
 django-admin startproject pde
@@ -75,7 +81,7 @@ python manage.py startapp tvt
 
 <br>
 
-### 3. Register Django App
+### 3. Register Django App and enable CORS
 Open `pde/pde/settings.py` and add the newly created app to the `INSTALLED_APPS` list:
 ```py
 INSTALLED_APPS = [
@@ -149,3 +155,62 @@ Visit: http://127.0.0.1:8000/
 
 ---
 
+## Create React Frontend App
+### Create React App Inside Django Project Folder
+```bash
+cd pde
+npm create vite@latest frontend -- --template react
+```
+
+### Install Axios for API calls
+```bash
+cd frontend
+npm install axios react-router-dom jwt-decode
+```
+
+<br>
+
+---
+
+### Update App code
+Update `pde/frontend/src/App.js`
+```js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+function App() {
+    const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/')
+            .then(res => setMessage(res.data.message))
+            .catch(err => console.error('API Error:', err));
+    }, []);
+
+    return (
+        <div>
+            <h2>Backend Message:</h2>
+            <p>{message}</p>
+        </div>
+    );
+}
+
+export default App;
+```
+
+<br>
+
+---
+
+### Start the Frontend
+```bash
+cd pde/frontend
+npm start
+```
+
+### Start the Backend in new terminal
+```bash
+cd pde
+python manage.py runserver
+```
+> Note: Make sure both frontend and backend both are running to allow frontend can communicate with the backend

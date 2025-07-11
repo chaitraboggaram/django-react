@@ -45,3 +45,13 @@ local_settings.py
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Node.js / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
