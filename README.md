@@ -173,7 +173,7 @@ npm install axios react-router-dom jwt-decode
 ---
 
 ### Update App code
-Update `pde/frontend/src/App.js`
+Update `pde/frontend/src/App.jsx`
 ```js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -220,7 +220,7 @@ python manage.py runserver
 ---
 
 ### Organize files
-1. Delete all css files in pde\frontend\src\assets
+1. Delete all CSS files in `pde/frontend/src/assets`, along with any references to them in other files.
 
 2. Update
 `pde\frontend\src\App.jsx`
@@ -310,7 +310,7 @@ export default api;	// Export the configured Axios instance for use in other par
 ### Writing Protected Routes
 1. Create a file in `pde/frontend/src/components/protected_route.jsx`
 This wrapper for a protected route
-```js
+```jsx
 import { Navigate } from "react-router-dom"; 	// Import Navigate from React Router to redirect unauthorized users
 import { jwtDecode } from "jwt-decode";			// Import jwtDecode to decode JWT tokens and read their payload (like expiry time)
 import api from "../api";						// Import a pre-configured axios instance
@@ -389,3 +389,101 @@ export default ProtectedRoute;
 
 ---
 
+### Navigation and Routes
+1. Create files
+`pde/frontend/src/pages/home.jsx`
+```jsx
+function Home() {
+	return <div>Home</div>
+}
+
+export default Home
+```
+
+<br>
+
+`pde/frontend/src/pages/login.jsx`
+```jsx
+function Login() {
+	return <div>Login</div>
+}
+
+export default Login
+```
+
+<br>
+
+`pde/frontend/src/pages/not_found.jsx`
+```jsx
+function NotFound() {
+	return <div>Not Found</div>
+}
+
+export default NotFound
+```
+
+<br>
+
+`pde/frontend/src/pages/register.jsx`
+```jsx
+function Register() {
+	return <div>Register</div>
+}
+
+export default Register
+```
+
+<br>
+
+2. Update `pde/frontend/src/App.jsx`
+```jsx
+import react from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import NotFound from "./pages/not_found";
+import Home from "./pages/home";
+import ProtectedRoute from "./components/protected_route";
+
+function Logout() {
+	localStorage.clear();
+	return <Navigate to="/login" />;
+}
+
+function RegisterAndLogout() {
+	localStorage.clear();
+	return <Register />;
+}
+
+function App() {
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route
+					path="/"
+					element={
+						<ProtectedRoute>
+							<Home />				{/*  You cannot access home until you have successfully authenticated */}
+						</ProtectedRoute>
+					}
+				/>
+				<Route path="/login" element={<Login />} />			{/*  No authentication is required to access these */}
+				<Route path="/logout" element={<Logout />} />
+				<Route path="/register" element={<Register />} />
+				<Route path="*" element={<NotFound />} />
+			</Routes>
+		</BrowserRouter>
+	);
+};
+
+export default App;
+```
+
+<br>
+
+### Running frontend
+```bash
+npm install
+npm run dev
+```
+Access the local host at http://localhost:5173/
