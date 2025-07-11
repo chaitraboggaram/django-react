@@ -7,7 +7,7 @@
 2. [Create a Django Project and Application](#create-a-django-project-and-application)
 	2.1 [Create Django Project](#1-Create-Django-Project)
 	2.2 [Create Django App](#2-Create-Django-App)
-	2.3 [Register Django App and enable CORS](#3-Register-Django-App-and-enable-CORS)
+	2.3 [Register Django App](#3-Register-Django-App)
 	2.4 [Configure URL Routing](#4-Configure-URL-Routing)
 		2.4.1 [Configure Application-Level URLs](#Configure-Application-Level-URLs)
 		2.4.2 [Configure Application-Level URLs in Project URLs](#Configure-Application-Level-URLs-in-Project-URLs)
@@ -81,23 +81,13 @@ python manage.py startapp tvt
 
 <br>
 
-### 3. Register Django App and enable CORS
+### 3. Register Django App
 Open `pde/pde/settings.py` and add the newly created app to the `INSTALLED_APPS` list:
 ```py
 INSTALLED_APPS = [
 	...
 	'tvt',
-    'rest_framework',
-    'corsheaders',
 ]
-
-
-MIDDLEWARE = [
-    ...
-    'corsheaders.middleware.CorsMiddleware'
-]
-
-CORS_ALLOW_ALL_ORIGINS = True
 ```
 
 <br>
@@ -260,6 +250,11 @@ createRoot(document.getElementById('root')).render(
 
 4. Create the below files
 `pde\frontend\.env`
+```
+VITE_API_URL="http://127.0.0.1:8000"
+```
+
+<br>
 
 `pde\frontend\src\constants.js`
 ```js
@@ -487,3 +482,140 @@ npm install
 npm run dev
 ```
 Access the local host at http://localhost:5173/
+
+<br>
+
+## Enable CORS in Django App
+- CORS (Cross-Origin Resource Sharing) is a browser security feature that blocks requests from different origins by default. We enable CORS on the backend to allow the frontend (served from a different domain or port) to access API resources safely.
+- Modern browsers enforce the Same-Origin Policy to protect users from malicious scripts, but since some cross-origin requests (like in our application) are legitimate, we use CORS to allow them safely.
+	- Frontend (React) is served from http://localhost:3000
+	- Backend (Django) is running at http://localhost:8000
+- By default, this setup will fail due to CORS restrictions.
+
+1. Open `pde/pde/settings.py` and add the newly created app to the `INSTALLED_APPS` list:
+```py
+from datetime import timedelta
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+ALLOWED_HOSTS = ["*"]           # Allow any host to access the django application
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+INSTALLED_APPS = [
+    ...
+    'tvt',
+    'rest_framework',
+    'corsheaders',
+]
+
+MIDDLEWARE = [
+    ...
+    'corsheaders.middleware.CorsMiddleware'
+]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOWS_CREDENTIALS = True
+```
+
+<br>
+
+## Implement JWT Token Authentication in Django App
+Frontend communicates with backend through a request and receives a response from backend
+User enter credentials in Frontend, then the Frontend will take those credentials and provide it to the Backend and requests for a token with these credentidals. Once authenticated Backend provides 2 tokens
+1. Access Token -> Used for all our requests
+2. Refresh Token -> Used for refresh the access token
+Frontend will store both the access token and refresh token in the browser's cache
+Once the access token is expired, the frontend will send the refresh token to backend, if that refresh token is valid, a new access token is provided, frontend will stored the access token again
+
+1. Create `pde/tvt/serializers.py`
+```py
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ["id", "username", "password"]
+		extra_kwargs = {"password": {"write_only": True}}
+
+	def create(self, validated_data):
+		user = User.objects.create_user(**validated_data)
+		return user
+```
+
+<br>
+
+2. Update `pde/tvt/views.py`
+```py
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.contrib.auth.models import User
+from .serializers import UserSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics
+
+class CreateUserView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+```
+
+<br>
+
+3. Update `pde/pde/urls.py`
+```py
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from tvt.views import CreateUserView
+
+urlpatterns = [
+	path("admin/", admin.site.urls),
+	path("api/user/register/", CreateUserView.as_view(), name="register"),
+	path("api/token/", TokenObtainPairView.as_view(), name="get_token"),
+	path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"),
+	path("api-auth", include("rest_framework.urls")),
+	path("", include("tvt.urls")),
+]
+```
+
+<br>
+
+4. Migrate the django project
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+<br>
+
+5. Testing the apis
+Run the django server
+```bash
+python manage.py runserver
+```
+- Open http://127.0.0.1:8000/api/user/register/ -> Enter username and password to register -> POST
+- Open http://127.0.0.1:8000/api/token/ -> Enter username and password you registered above to get access token -> POST
+- Copy the Refresh Token and open http://127.0.0.1:8000/api/token/refresh/ -> Paste the copied refresh token -> POST -> This generates new access token
+
+<br>
+
