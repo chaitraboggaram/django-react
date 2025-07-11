@@ -619,3 +619,88 @@ python manage.py runserver
 
 <br>
 
+### Implement login and registration forms
+1. Create Form in `pde/frontend/src/components/form.jsx`
+```jsx
+import { useState } from "react";
+import api from "../api";
+import { useNavigate } from "react-router-dom";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
+import "../styles/form.css";
+
+function Form({ route, method }) {
+	const [username, setUsername] = useState("");
+	const [password, setPassword] = useState("");
+	const [loading, setLoading] = useState(false);
+	const navigate = useNavigate();
+
+	const name = method === "login" ? "Login" : "Register";
+	const handleSubmit = async (e) => {
+		setLoading(true);
+		e.preventDefault();
+
+		try {
+			const response = await api.post(route, { username, password });
+			if (method === "login") {
+				localStorage.setItem(ACCESS_TOKEN, response.data.access);
+				localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
+				navigate("/");
+			} else {
+				navigate("/login");
+			}
+		} catch (error) {
+			alert(error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return <form onSubmit={handleSubmit} className="form-container">
+		<h1>{name}</h1>
+		<input className="form-input" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+		<input className="form-input" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+		<button className="form-button" type="submit">{name}</button>
+	</form>;
+}
+
+export default Form;
+```
+
+2. Create styling for form `pde/frontend/src/styles/form.css`
+
+3. Update Register and Login
+`pde/frontend/src/pages/register.jsx`
+```jsx
+import Form from "../components/form";
+
+function Register() {
+	return <Form route="/api/user/register/" method="register" />
+}
+
+export default Register;
+```
+
+`pde/frontend/src/pages/login.jsx`
+```jsx
+import Form from "../components/form";
+
+function Login() {
+	return <Form route="/api/token/" method="login" />;
+}
+
+export default Login;
+```
+
+## Running application
+> Run frontend and backend at the same time
+
+### Run frontend
+```bash
+npm run dev
+```
+Access the local host at http://localhost:5173/
+
+### Run backend
+```bash
+python manage.py runserver
+```
