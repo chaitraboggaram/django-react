@@ -704,3 +704,39 @@ Access the local host at http://localhost:5173/
 ```bash
 python manage.py runserver
 ```
+
+<br>
+
+---
+
+## Configure Database/Model in Django App
+1. Configure `pde/tvt/models.py`
+```py
+from django.db import models
+from django.contrib.auth.models import User
+
+class Document(models.Model):
+	session_key = models.CharField(max_length=40, null=True, blank=True)
+	agile_pn = models.CharField(max_length=100, blank=True)
+	agile_rev = models.CharField(max_length=100, blank=True)
+	title = models.CharField("Document Title", max_length=255, blank=True)
+	doc_type = models.CharField("Document Type", max_length=100, blank=True)
+	doc_id = models.CharField(max_length=100, blank=True)
+```
+
+2. Update Serielizer
+
+Migrate the django project
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+
+<a href={import.meta.env.BASE_URL}>
+		<img
+			src={`${import.meta.env.BASE_URL}src/assets/tvt.svg`}
+			alt="TVT Logo"
+			className="logo"
+		/>
+	</a>
