@@ -793,18 +793,293 @@ export default Traces;
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Document(models.Model):
-	session_key = models.CharField(max_length=40, null=True, blank=True)
-	agile_pn = models.CharField(max_length=100, blank=True)
-	agile_rev = models.CharField(max_length=100, blank=True)
-	title = models.CharField("Document Title", max_length=255, blank=True)
-	doc_type = models.CharField("Document Type", max_length=100, blank=True)
-	doc_id = models.CharField(max_length=100, blank=True)
+    agile_pn = models.CharField(max_length=100, default="NA")
+    agile_rev = models.CharField(max_length=100, default="NA")
+    doc_title = models.CharField(max_length=225, default="Untitled")
+    doc_type = models.CharField(max_length=100, default="General")
+    doc_id = models.CharField(max_length=100, default="0000")
+    created_at = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="documents")
+
+    def __str__(self):
+        return self.doc_title
 ```
 
-2. Update Serielizer
+2. Update `pde/tvt/serializers.py`
+```py
+from django.contrib.auth.models import User
+from rest_framework import serializers
+from .models import Document
 
-Migrate the django project
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "password"]
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def create(self, validated_data):
+        print(validated_data)
+        user = User.objects.create_user(**validated_data)
+        return user
+
+class DocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "agile_pn",
+            "agile_rev",
+            "doc_title",
+            "doc_type",
+            "doc_id",
+            "created_at",
+            "author",
+        ]
+        extra_kwargs = {"author": {"read_only": True}}
+```
+
+3. Update `pde/tvt/urls.py`
+```py
+from django.contrib.auth.models import User
+from rest_framework import serializers
+from .models import Document
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "password"]
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def create(self, validated_data):
+        print(validated_data)
+        user = User.objects.create_user(**validated_data)
+        return user
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "agile_pn",
+            "agile_rev",
+            "doc_title",
+            "doc_type",
+            "doc_id",
+            "created_at",
+            "author",
+        ]
+        extra_kwargs = {"author": {"read_only": True}}
+```
+
+4. Update `pde/tvt/views.py`
+```py
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from rest_framework import generics
+from .serializers import UserSerializer, DocumentSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .models import Document
+
+
+class DocumentListCreate(generics.ListCreateAPIView):
+    serializer_class = DocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Document.objects.filter(author=user)
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save(author=self.request.user)
+        else:
+            print(serializer.errors)
+
+
+class DocumentDelete(generics.DestroyAPIView):
+    serializer_class = DocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Document.objects.filter(author=user)
+
+
+class CreateUserView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+```
+
+5. Create `pde/frontend/src/components/document.jsx`
+```jsx
+import React from "react";
+import "../styles/document.css";
+
+function Document({ document, onDelete }) {
+    const formattedDate = new Date(document.created_at).toLocaleDateString("en-US");
+
+    return (
+        <div className="document-container">
+            <p><strong>Agile PN:</strong> {document.agile_pn}</p>
+            <p><strong>Agile Rev:</strong> {document.agile_rev}</p>
+            <p><strong>Title:</strong> {document.doc_title}</p>
+            <p><strong>Type:</strong> {document.doc_type}</p>
+            <p><strong>Doc ID:</strong> {document.doc_id}</p>
+            <p className="document-date">{formattedDate}</p>
+            <button className="delete-button" onClick={() => onDelete(document.id)}>
+                Delete
+            </button>
+        </div>
+    );
+}
+
+export default Document;
+```
+
+6. Update `pde/frontend/src/pages/home.jsx`
+```jsx
+import { useState, useEffect } from "react";
+import api from "../api";
+import Document from "../components/document";
+import "../styles/home.css";
+
+function Home() {
+    const [documents, setDocuments] = useState([]);
+
+    const [agilePn, setAgilePn] = useState("");
+    const [agileRev, setAgileRev] = useState("");
+    const [docTitle, setDocTitle] = useState("");
+    const [docType, setDocType] = useState("");
+    const [docId, setDocId] = useState("");
+
+    useEffect(() => {
+        getDocuments();
+    }, []);
+
+    const getDocuments = () => {
+        api
+            .get("/documents/")
+            .then((res) => res.data)
+            .then((data) => {
+                setDocuments(data);
+                console.log(data);
+            })
+            .catch((err) => alert(err));
+    };
+
+    const deleteDocument = (id) => {
+        api
+            .delete(`/documents/delete/${id}/`)
+            .then((res) => {
+                if (res.status === 204) alert("Document deleted!");
+                else alert("Failed to delete document.");
+                getDocuments();
+            })
+            .catch((error) => alert(error));
+    };
+
+    const createDocument = (e) => {
+        e.preventDefault();
+        api
+            .post("/documents/", {
+                agile_pn: agilePn,
+                agile_rev: agileRev,
+                doc_title: docTitle,
+                doc_type: docType,
+                doc_id: docId,
+            })
+            .then((res) => {
+                if (res.status === 201) {
+                    alert("Document created!");
+                    getDocuments();
+                    // Clear input fields after successful submission
+                    setAgilePn("");
+                    setAgileRev("");
+                    setDocTitle("");
+                    setDocType("");
+                    setDocId("");
+                } else {
+                    alert("Failed to make document.");
+                }
+            })
+            .catch((err) => alert(err));
+    };
+
+    return (
+        <div>
+            <div>
+                <h2>Documents</h2>
+                {documents.map((document) => (
+                    <Document document={document} onDelete={deleteDocument} key={document.id} />
+                ))}
+            </div>
+            <h2>Create a Document</h2>
+            <form onSubmit={createDocument}>
+                <label htmlFor="agile_pn">Agile PN:</label>
+                <input
+                    type="text"
+                    id="agile_pn"
+                    required
+                    value={agilePn}
+                    onChange={(e) => setAgilePn(e.target.value)}
+                />
+                <br />
+
+                <label htmlFor="agile_rev">Agile Rev:</label>
+                <input
+                    type="text"
+                    id="agile_rev"
+                    required
+                    value={agileRev}
+                    onChange={(e) => setAgileRev(e.target.value)}
+                />
+                <br />
+
+                <label htmlFor="doc_title">Doc Title:</label>
+                <input
+                    type="text"
+                    id="doc_title"
+                    required
+                    value={docTitle}
+                    onChange={(e) => setDocTitle(e.target.value)}
+                />
+                <br />
+
+                <label htmlFor="doc_type">Doc Type:</label>
+                <input
+                    type="text"
+                    id="doc_type"
+                    required
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                />
+                <br />
+
+                <label htmlFor="doc_id">Doc ID:</label>
+                <input
+                    type="text"
+                    id="doc_id"
+                    required
+                    value={docId}
+                    onChange={(e) => setDocId(e.target.value)}
+                />
+                <br />
+
+                <input type="submit" value="Submit" />
+            </form>
+        </div>
+    );
+}
+
+export default Home;
+```
+
+7. Migrate the django project
 ```bash
 python manage.py makemigrations
 python manage.py migrate
