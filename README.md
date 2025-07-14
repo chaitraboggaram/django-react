@@ -801,7 +801,7 @@ class Document(models.Model):
     doc_type = models.CharField(max_length=100, default="General")
     doc_id = models.CharField(max_length=100, default="0000")
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="documents")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="documents")
 
     def __str__(self):
         return self.doc_title
@@ -835,9 +835,9 @@ class DocumentSerializer(serializers.ModelSerializer):
             "doc_type",
             "doc_id",
             "created_at",
-            "author",
+            "user",
         ]
-        extra_kwargs = {"author": {"read_only": True}}
+        extra_kwargs = {"user": {"read_only": True}}
 ```
 
 3. Update `pde/tvt/urls.py`
@@ -869,9 +869,9 @@ class DocumentSerializer(serializers.ModelSerializer):
             "doc_type",
             "doc_id",
             "created_at",
-            "author",
+            "user",
         ]
-        extra_kwargs = {"author": {"read_only": True}}
+        extra_kwargs = {"user": {"read_only": True}}
 ```
 
 4. Update `pde/tvt/views.py`
@@ -890,11 +890,11 @@ class DocumentListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Document.objects.filter(author=user)
+        return Document.objects.filter(user=user)
 
     def perform_create(self, serializer):
         if serializer.is_valid():
-            serializer.save(author=self.request.user)
+            serializer.save(user=self.request.user)
         else:
             print(serializer.errors)
 
@@ -905,7 +905,7 @@ class DocumentDelete(generics.DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Document.objects.filter(author=user)
+        return Document.objects.filter(user=user)
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -929,7 +929,7 @@ function Document({ document, onDelete }) {
             <p><strong>Agile Rev:</strong> {document.agile_rev}</p>
             <p><strong>Title:</strong> {document.doc_title}</p>
             <p><strong>Type:</strong> {document.doc_type}</p>
-            <p><strong>Doc ID:</strong> {document.doc_id}</p>
+            <p><strong>Document ID:</strong> {document.doc_id}</p>
             <p className="document-date">{formattedDate}</p>
             <button className="delete-button" onClick={() => onDelete(document.id)}>
                 Delete
@@ -1040,7 +1040,7 @@ function Home() {
                 />
                 <br />
 
-                <label htmlFor="doc_title">Doc Title:</label>
+                <label htmlFor="doc_title">Document Title:</label>
                 <input
                     type="text"
                     id="doc_title"
@@ -1050,7 +1050,7 @@ function Home() {
                 />
                 <br />
 
-                <label htmlFor="doc_type">Doc Type:</label>
+                <label htmlFor="doc_type">Document Type:</label>
                 <input
                     type="text"
                     id="doc_type"
@@ -1060,7 +1060,7 @@ function Home() {
                 />
                 <br />
 
-                <label htmlFor="doc_id">Doc ID:</label>
+                <label htmlFor="doc_id">Document ID:</label>
                 <input
                     type="text"
                     id="doc_id"

@@ -25,6 +25,11 @@ function Layout({ children }) {
 							<button type="button" className="btn-dark">Traces</button>
 						</a>
 					</li>
+					<li>
+						<a href={`${import.meta.env.BASE_URL}logout/`}>
+							<button type="button" className="btn-dark">Logout</button>
+						</a>
+					</li>
 				</ul>
 			</nav>
 

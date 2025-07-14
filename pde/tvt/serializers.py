@@ -24,7 +24,6 @@ class DocumentSerializer(serializers.ModelSerializer):
             "doc_title",
             "doc_type",
             "doc_id",
-            "created_at",
-            "author",
+            "user",
         ]
-        extra_kwargs = {"author": {"read_only": True}}
+        extra_kwargs = {"user": {"read_only": True}}

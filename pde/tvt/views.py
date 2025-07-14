@@ -11,24 +11,25 @@ class DocumentListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        return Document.objects.filter(author=user)
+        return Document.objects.filter(user=self.request.user).order_by('order')
 
     def perform_create(self, serializer):
         if serializer.is_valid():
-            serializer.save(author=self.request.user)
+            serializer.save(user=self.request.user)
         else:
             print(serializer.errors)
-
 
 class DocumentDelete(generics.DestroyAPIView):
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        return Document.objects.filter(author=user)
+        return Document.objects.filter(user=self.request.user)
 
+class DocumentUpdateView(generics.UpdateAPIView):
+	queryset = Document.objects.all()
+	serializer_class = DocumentSerializer
+	lookup_field = 'id'
 
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
