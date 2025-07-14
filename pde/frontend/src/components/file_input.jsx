@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { headerMap } from "./fields_config";
 
 function FileInput({ onCsvParsed }) {
 	const fileInputRef = useRef(null);
@@ -25,14 +26,6 @@ function FileInput({ onCsvParsed }) {
 			}
 
 			const rawHeaders = lines[0].split(",").map((h) => h.trim());
-			const headerMap = {
-				"Agile PN": "agile_pn",
-				"Agile Rev": "agile_rev",
-				"Document Title": "doc_title",
-				"Document Type": "doc_type",
-				"Document ID": "doc_id",
-			};
-
 			const headers = rawHeaders.map((h) => headerMap[h] || h);
 			const rows = lines.slice(1);
 
@@ -49,7 +42,6 @@ function FileInput({ onCsvParsed }) {
 				})
 				.filter(Boolean);
 
-			// Pass documents to parent for uploading
 			onCsvParsed(documents);
 		};
 

@@ -77,12 +77,18 @@ function DocumentTable() {
 					</tr>
 				</thead>
 				<tbody>
-					<DocumentList
-						documents={documents}
-						onDelete={deleteDocument}
-						onUpdate={updateDocument}
-					/>
-					<InputRow onCreate={createDocument} />
+					{documents.length === 0 ? (
+						<InputRow onCreate={createDocument} />
+					) : (
+						<>
+							<DocumentList
+								documents={documents}
+								onDelete={deleteDocument}
+								onUpdate={updateDocument}
+								onCreate={createDocument}
+							/>
+						</>
+					)}
 				</tbody>
 			</table>
 		</form>
