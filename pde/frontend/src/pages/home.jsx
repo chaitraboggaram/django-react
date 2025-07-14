@@ -80,7 +80,8 @@ function Home() {
 					</div>
 				</form>
 
-				<br /><br />
+				<br />
+				<br />
 
 				<table>
 					<thead>

@@ -709,6 +709,84 @@ python manage.py runserver
 
 ---
 
+## React Templates
+1. Create base template as `pde/frontend/src/components/base.jsx`
+```jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import "../styles/base.css";
+
+function Layout({ children }) {
+	return (
+		<div>
+			{/* Navbar section */}
+			<nav className="navbar">
+				<a href={import.meta.env.BASE_URL}>
+					<img
+						src={`${import.meta.env.BASE_URL}src/assets/tvt.svg`}
+						alt="TVT Logo"
+						className="logo"
+					/>
+				</a>
+				<ul>
+					<li>
+						<a href={import.meta.env.BASE_URL}>
+							<button type="button" className="btn-dark">Home</button>
+						</a>
+					</li>
+					<li>
+						<a href={`${import.meta.env.BASE_URL}traces/`}>
+							<button type="button" className="btn-dark">Traces</button>
+						</a>
+					</li>
+				</ul>
+			</nav>
+
+			{/* Main page content rendered below the navbar */}
+			<main className="main-content">
+				{children}			{/* the content from the child file */}
+			</main>
+		</div>
+	);
+}
+
+export default Layout;
+```
+
+2. Import base template to `pde/frontend/src/pages/home.jsx`
+```jsx
+import Layout from '../components/base';
+
+return <Layout>
+		// Enter html content here
+	</Lagout>
+```
+
+<br>
+
+---
+
+## Create a new route
+1. Update App.jsx
+```jsx
+import Traces from "./pages/traces";
+
+<Route path="/traces" element={<Traces />} />
+```
+
+2. Create `pde/frontend/src/pages/traces.jsx`
+```jsx
+function Traces() {
+	return <div>Traces</div>;
+}
+
+export default Traces;
+```
+
+<br>
+
+---
+
 ## Configure Database/Model in Django App
 1. Configure `pde/tvt/models.py`
 ```py
@@ -731,12 +809,3 @@ Migrate the django project
 python manage.py makemigrations
 python manage.py migrate
 ```
-
-
-<a href={import.meta.env.BASE_URL}>
-		<img
-			src={`${import.meta.env.BASE_URL}src/assets/tvt.svg`}
-			alt="TVT Logo"
-			className="logo"
-		/>
-	</a>

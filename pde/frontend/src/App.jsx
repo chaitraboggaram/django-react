@@ -5,6 +5,7 @@ import Register from "./pages/register";
 import NotFound from "./pages/not_found";
 import Home from "./pages/home";
 import ProtectedRoute from "./components/protected_route";
+import Traces from "./pages/traces";
 
 function Logout() {
 	localStorage.clear();
@@ -31,6 +32,7 @@ function App() {
 				<Route path="/login" element={<Login />} />			{/*  No authentication is required to access these */}
 				<Route path="/logout" element={<Logout />} />
 				<Route path="/register" element={<Register />} />
+				<Route path="/traces" element={<Traces />} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</BrowserRouter>
