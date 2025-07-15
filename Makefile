@@ -21,10 +21,13 @@ migrate:
 stat:
 	cd pde && python manage.py collectstatic --noinput
 
+# Run the development server
+django:
+	cd pde && python manage.py runserver
+
 # Run react server
 react:
 	cd pde && cd frontend && npm run dev
 
-# Run the development server
-django:
-	cd pde && python manage.py runserver
+build:
+	cd pde && cd frontend && npm run build

@@ -1,12 +1,51 @@
+import { useEffect, useState } from "react";
+import api from "../api";
 import DocumentTable from "../components/document_table";
 import Layout from "../components/base";
-import "../styles/traces.css";
+import CytoscapeGraph from "../components/cytoscape";
 
 function Traces() {
+	const [documents, setDocuments] = useState([]);
+	const [highlighted, setHighlighted] = useState(null);
+
+	useEffect(() => {
+		api
+			.get("/documents/")
+			.then((res) => {
+				const data = res.data;
+				data.sort((a, b) => {
+					const orderA = a.order !== undefined ? a.order : 9999;
+					const orderB = b.order !== undefined ? b.order : 9999;
+					return orderA - orderB;
+				});
+				setDocuments(data);
+			})
+			.catch((err) => alert(err));
+	}, []);
+
+	// Handler when a node in Cytoscape is selected
+	const handleSelect = (nodeId) => {
+		setHighlighted(nodeId);
+	};
+
 	return (
 		<Layout>
 			<div>
-				<DocumentTable />
+				<CytoscapeGraph
+					documents={documents}
+					highlighted={highlighted}
+					onNodeSelect={handleSelect}
+				/>
+				{/* Pass documents and highlighted to DocumentTable so it can highlight & update properly */}
+				<DocumentTable
+					documents={documents}
+					highlighted={highlighted}
+					setHighlighted={setHighlighted}
+					refreshDocuments={() => {
+						// Optional: refetch documents if needed
+						api.get("/documents/").then(res => setDocuments(res.data));
+					}}
+				/>
 			</div>
 		</Layout>
 	);

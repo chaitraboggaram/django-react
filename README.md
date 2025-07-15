@@ -87,6 +87,7 @@ Open `pde/pde/settings.py` and add the newly created app to the `INSTALLED_APPS`
 INSTALLED_APPS = [
 	...
 	'tvt',
+    'rest_framework',
 ]
 ```
 
@@ -130,7 +131,6 @@ from rest_framework.decorators import api_view
 @api_view(['GET'])
 def get_data(request):
     return Response({'message': 'Hello from Django!'})
-
 ```
 
 <br>
@@ -146,6 +146,11 @@ Visit: http://127.0.0.1:8000/
 ---
 
 ## Create React Frontend App
+### Pre-Requisites
+Install node.js from `https://nodejs.org/en/download`
+
+<br>
+
 ### Create React App Inside Django Project Folder
 ```bash
 cd pde
@@ -155,7 +160,8 @@ npm create vite@latest frontend -- --template react
 ### Install Axios for API calls
 ```bash
 cd frontend
-npm install axios react-router-dom jwt-decode
+npm install axios react-router-dom jwt-decode cytoscape @tanstack/react-table
+npm run dev
 ```
 
 <br>

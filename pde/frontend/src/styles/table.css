@@ -1,0 +1,87 @@
+.icon-button {
+	background-color: transparent;
+	border: none;
+	width: 30px;
+	height: 30px;
+	border-radius: 4px;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.1s ease;
+	margin-right: 8px;
+}
+
+.icon-button.add {
+	background-color: #3498db;
+}
+
+.icon-button.edit {
+	background-color: #f39c12;
+}
+
+.icon-button.delete {
+	background-color: #e74c3c;
+}
+
+.icon-button.done {
+	background-color: #5cb85c;
+}
+
+.icon-button.clear {
+	background-color: #f1c40f;
+}
+
+.icon-button.cancel {
+	background-color: #9b59b6;
+}
+
+.icon-button:hover {
+	filter: brightness(0.75);
+}
+
+.button-icon {
+	width: 18px;
+	height: 18px;
+	object-fit: contain;
+}
+
+.table-header {
+	font-size: 18px;
+	font-family: Arial, Helvetica, sans-serif;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: white;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.table-input {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+	flex-grow: 1;
+	min-height: 25px;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	resize: none;
+}
+
+.table-td {
+	padding: 8px 10px;
+}
+
+.center-class {
+	text-align: center;
+}
+
+tbody tr {
+	background: #ffffff;
+	border-radius: 6px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}

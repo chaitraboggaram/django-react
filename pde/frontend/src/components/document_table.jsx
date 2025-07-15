@@ -2,10 +2,24 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import DocumentList from "./document_list";
 import InputRow from "./input_row";
-import "../styles/home.css";
+import "../styles/table.css";
+import {
+	useReactTable,
+	getCoreRowModel,
+	getFilteredRowModel,
+	getSortedRowModel,
+	flexRender,
+	createColumnHelper,
+} from "@tanstack/react-table";
+import "../styles/document.css";
+
+const columnHelper = createColumnHelper();
 
 function DocumentTable() {
 	const [documents, setDocuments] = useState([]);
+	const [highlighted, setHighlighted] = useState(null);
+	const [globalFilter, setGlobalFilter] = useState("");
+	const [sorting, setSorting] = useState([]);
 
 	useEffect(() => {
 		getDocuments();
@@ -16,7 +30,6 @@ function DocumentTable() {
 			.get("/documents/")
 			.then((res) => res.data)
 			.then((data) => {
-				// Sort by order field to preserve CSV input order
 				data.sort((a, b) => {
 					const orderA = a.order !== undefined ? a.order : 9999;
 					const orderB = b.order !== undefined ? b.order : 9999;
@@ -63,35 +76,92 @@ function DocumentTable() {
 			.catch((err) => alert(err));
 	};
 
+	const columns = [
+		columnHelper.accessor("agile_pn", {
+			header: () => "Agile PN",
+			cell: (info) => info.getValue(),
+		}),
+		columnHelper.accessor("agile_rev", {
+			header: () => "Agile Rev",
+			cell: (info) => info.getValue(),
+		}),
+		columnHelper.accessor("title", {
+			header: () => "Document Title",
+			cell: (info) => info.getValue(),
+		}),
+		columnHelper.accessor("doc_type", {
+			header: () => "Document Type",
+			cell: (info) => info.getValue(),
+		}),
+		columnHelper.accessor("id", {
+			header: () => "Document ID",
+			cell: (info) => info.getValue(),
+		}),
+	];
+
+	const table = useReactTable({
+		data: Array.isArray(documents) ? documents : [],
+		columns,
+		state: { globalFilter, sorting },
+		onGlobalFilterChange: setGlobalFilter,
+		onSortingChange: setSorting,
+		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+	});
+
 	return (
-		<form>
-			<table className="input-table">
-				<thead>
-					<tr>
-						<th>Agile PN</th>
-						<th>Agile Rev</th>
-						<th>Document Title</th>
-						<th>Document Type</th>
-						<th>Document ID</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{documents.length === 0 ? (
-						<InputRow onCreate={createDocument} />
-					) : (
-						<>
-							<DocumentList
-								documents={documents}
-								onDelete={deleteDocument}
-								onUpdate={updateDocument}
-								onCreate={createDocument}
-							/>
-						</>
-					)}
-				</tbody>
-			</table>
-		</form>
+		<div className="document-container">
+			<div className="filter-box">
+				<input
+					type="text"
+					placeholder="Filter documents..."
+					value={globalFilter ?? ""}
+					onChange={(e) => setGlobalFilter(e.target.value)}
+				/>
+			</div>
+			<form>
+				<table className="input-table">
+					<thead>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<th
+										key={header.id}
+										onClick={header.column.getToggleSortingHandler()}
+									>
+										{flexRender(
+											header.column.columnDef.header,
+											header.getContext()
+										)}
+										{header.column.getIsSorted() === "asc"
+											? " 🔼"
+											: header.column.getIsSorted() === "desc"
+												? " 🔽"
+												: ""}
+									</th>
+								))}
+								<th></th>
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{documents.length === 0 ? (
+							<InputRow onCreate={createDocument} />
+						) : (
+							<>
+								<DocumentList
+									documents={documents}
+									onDelete={deleteDocument}
+									onUpdate={updateDocument}
+									onCreate={createDocument}
+								/>
+							</>
+						)}
+					</tbody>
+				</table>
+			</form>
+		</div>
 	);
 }
 
