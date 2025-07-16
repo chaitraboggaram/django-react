@@ -15,21 +15,22 @@ const columnHelper = createColumnHelper();
 
 const documentTypeList = [
 	"---",
-	"Risk",
-	"Requirement",
-	"Specification",
-	"Design",
-	"Test",
-	"Task",
-	"Development",
+	"Risks",
+	"Requirements",
+	"Specifications",
+	"Testing",
+	"Manufacturing",
+	"Executed Protocols",
 ];
+
+const agilePn = "agile_pn";
 
 function DocumentTable({ documents, highlighted, setHighlighted, refreshDocuments }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [sorting, setSorting] = useState([]);
 	const [activeInputRowId, setActiveInputRowId] = useState(null);
 	const tableRef = useRef(null);
-	const [selectedColumn, setSelectedColumn] = useState("agile_pn");
+	const [selectedColumn, setSelectedColumn] = useState(agilePn);
 	const [columnFilter, setColumnFilter] = useState("");
 
 	useEffect(() => {
@@ -48,28 +49,12 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 		};
 	}, [setHighlighted]);
 
-	const columns = [
-		columnHelper.accessor("agile_pn", {
-			header: () => "Agile PN",
+	const columns = documentFields.map(({ key, label }) =>
+		columnHelper.accessor(key, {
+			header: () => label,
 			cell: (info) => info.getValue(),
-		}),
-		columnHelper.accessor("agile_rev", {
-			header: () => "Agile Rev",
-			cell: (info) => info.getValue(),
-		}),
-		columnHelper.accessor("doc_title", {
-			header: () => "Document Title",
-			cell: (info) => info.getValue(),
-		}),
-		columnHelper.accessor("doc_type", {
-			header: () => "Document Type",
-			cell: (info) => info.getValue(),
-		}),
-		columnHelper.accessor("id", {
-			header: () => "Document ID",
-			cell: (info) => info.getValue(),
-		}),
-	];
+		})
+	);
 
 	const table = useReactTable({
 		data: Array.isArray(documents) ? documents : [],
