@@ -60,10 +60,62 @@
 	resize: none;
 }
 
-.data-table input[type="text"] {
+.user-text-input {
 	width: 100%;
 	box-sizing: border-box;
 	padding: 5px;
+	border: 1.5px solid #ccc;
+	border-radius: 6px;
+	background-color: #fff;
+	color: #333;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	outline: none;
+}
+
+.user-text-input::placeholder {
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #999;
+	font-style: italic;
+	text-align: center;
+}
+
+.user-text-input:focus {
+	border-color: #4096ff;
+	box-shadow: 0 0 6px #4096ff88;
+}
+
+.user-select-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 5px;
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+	border: 1.5px solid #ccc;
+	border-radius: 6px;
+	background-color: #fff;
+	color: #333;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	outline: none;
+	text-align: center;
+}
+
+.user-select-input.placeholder-option {
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #999;
+	font-style: italic;
+	text-align: center;
+}
+
+.user-select-input option[disabled] {
+	color: #999;
+	font-style: italic;
+}
+
+.user-select-input:focus {
+	border-color: #4096ff;
+	box-shadow: 0 0 6px #4096ff88;
 }
 
 .data-table tr {
@@ -135,4 +187,14 @@
 	outline: none;
 	border-color: #4096ff;
 	box-shadow: 0 0 4px #4096ffaa;
+}
+
+.input-error {
+	border: 1px solid red;
+}
+
+.error-message {
+	color: red;
+	font-size: 0.8rem;
+	margin-top: 4px;
 }

@@ -13,6 +13,17 @@ import "../styles/document_table.css";
 
 const columnHelper = createColumnHelper();
 
+const documentTypeList = [
+	"---",
+	"Risk",
+	"Requirement",
+	"Specification",
+	"Design",
+	"Test",
+	"Task",
+	"Development",
+];
+
 function DocumentTable({ documents, highlighted, setHighlighted, refreshDocuments }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [sorting, setSorting] = useState([]);
@@ -249,7 +260,29 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 			{documentFields.map(({ key, className }) => (
 				<td key={key} className={className}>
 					{isEditing ? (
-						<input name={key} value={editedDoc[key] || ""} onChange={handleChange} />
+						key === "doc_type" ? (
+							<select
+								name={key}
+								id={key}
+								value={editedDoc[key] || ""}
+								onChange={handleChange}
+								className="user-select-input"
+							>
+								<option value="---" disabled>Select Document Type</option>
+								{documentTypeList.map((type) => (
+									<option key={type} value={type}>
+										{type}
+									</option>
+								))}
+							</select>
+						) : (
+							<input
+								name={key}
+								value={editedDoc[key] || ""}
+								onChange={handleChange}
+								className="user-text-input"
+							/>
+						)
 					) : (
 						document[key]
 					)}
@@ -306,6 +339,8 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 }
 
 function InputRow({ onCreate, onCancel }) {
+	const [errors, setErrors] = useState({});
+
 	const initialState = documentFields.reduce((acc, field) => {
 		acc[field.key] = "";
 		return acc;
@@ -329,12 +364,25 @@ function InputRow({ onCreate, onCancel }) {
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		const allFilled = documentFields.every(({ key }) => formData[key].trim() !== "");
-		if (!allFilled) {
-			alert("Please fill in all fields before submitting.");
+
+		let newErrors = {};
+
+		documentFields.forEach(({ key }) => {
+			const value = formData[key]?.trim() ?? "";
+
+			if (key === "doc_type" && value === "---") {
+				newErrors[key] = "Please select a document type.";
+			} else if (value === "") {
+				newErrors[key] = "This field is required.";
+			}
+		});
+
+		if (Object.keys(newErrors).length > 0) {
+			setErrors(newErrors);
 			return;
 		}
 
+		setErrors({});
 		onCreate(formData);
 		handleClear();
 		if (onCancel) onCancel();
@@ -344,17 +392,42 @@ function InputRow({ onCreate, onCancel }) {
 		<tr>
 			{documentFields.map(({ key, label }) => (
 				<td key={key}>
-					<input
-						type="text"
-						name={key}
-						id={key}
-						placeholder={label}
-						required
-						value={formData[key]}
-						onChange={handleChange}
-					/>
+					{key === "doc_type" ? (
+						<>
+							<select
+								name={key}
+								id={key}
+								required
+								value={formData[key]}
+								onChange={handleChange}
+								className={`user-select-input ${errors[key] ? "input-error" : ""}`}
+							>
+								{documentTypeList.map((option) => (
+									<option key={option} value={option}>
+										{option}
+									</option>
+								))}
+							</select>
+							{errors[key] && <div className="error-message">{errors[key]}</div>}
+						</>
+					) : (
+						<>
+							<input
+								type="text"
+								name={key}
+								id={key}
+								placeholder={label}
+								required
+								value={formData[key]}
+								onChange={handleChange}
+								className={`user-text-input ${errors[key] ? "input-error" : ""}`}
+							/>
+							{errors[key] && <div className="error-message">{errors[key]}</div>}
+						</>
+					)}
 				</td>
 			))}
+
 			<td>
 				<button type="button" className="icon-button done" onClick={handleSubmit}>
 					<img
