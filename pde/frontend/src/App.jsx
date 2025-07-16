@@ -25,14 +25,17 @@ function App() {
 					path="/"
 					element={
 						<ProtectedRoute>
-							<Home />				{/*  You cannot access home until you have successfully authenticated */}
+							<Traces />				{/*  You cannot access home until you have successfully authenticated */}
 						</ProtectedRoute>
 					}
 				/>
 				<Route path="/login" element={<Login />} />			{/*  No authentication is required to access these */}
 				<Route path="/logout" element={<Logout />} />
 				<Route path="/register" element={<Register />} />
-				<Route path="/traces" element={<Traces />} />
+				<Route path="/home" element={
+					<ProtectedRoute>
+						<Home />
+					</ProtectedRoute>} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</BrowserRouter>

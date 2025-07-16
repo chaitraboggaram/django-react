@@ -37,6 +37,7 @@ function Traces() {
 					onNodeSelect={handleSelect}
 				/>
 				{/* Pass documents and highlighted to DocumentTable so it can highlight & update properly */}
+				<br />
 				<DocumentTable
 					documents={documents}
 					highlighted={highlighted}

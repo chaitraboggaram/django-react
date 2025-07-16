@@ -38,7 +38,7 @@ source .venv/bin/activate
 
 ### 2. Install Required Packages
 ```bash
-pip install django djangorestframework django-cors-headers dotenv
+pip install django djangorestframework django-cors-headers dotenv djangorestframework-simplejwt
 ```
 
 #### Save Dependencies

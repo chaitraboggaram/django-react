@@ -15,16 +15,16 @@ function Layout({ children }) {
 					/>
 				</a>
 				<ul>
-					<li>
+					{/* <li>
 						<a href={import.meta.env.BASE_URL}>
 							<button type="button" className="btn-dark">Home</button>
 						</a>
-					</li>
-					<li>
+					</li> */}
+					{/* <li>
 						<a href={`${import.meta.env.BASE_URL}traces/`}>
 							<button type="button" className="btn-dark">Traces</button>
 						</a>
-					</li>
+					</li> */}
 					<li>
 						<a href={`${import.meta.env.BASE_URL}logout/`}>
 							<button type="button" className="btn-dark">Logout</button>
@@ -35,6 +35,7 @@ function Layout({ children }) {
 
 			{/* Main page content rendered below the navbar */}
 			<main className="main-content">
+				<br />
 				{children}
 			</main>
 		</div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import cytoscape from "cytoscape";
+import "../styles/cytoscape.css";
 
 const document_colors = {
 	Requirement: "#1f77b4",
@@ -79,12 +80,8 @@ export default function CytoscapeGraph({
 					{
 						selector: ".highlighted",
 						style: {
-							"border-width": 3,
-							"border-color": "red",
-							"overlay-color": "orange",
-							"overlay-opacity": 0.2,
-							width: 60,
-							height: 60,
+							width: 80,
+							height: 80,
 							"z-index": 10,
 						},
 					},
@@ -145,5 +142,5 @@ export default function CytoscapeGraph({
 		}
 	}, [highlighted]);
 
-	return <div ref={containerRef} className="graph-section" style={{ height: 400, width: "100%" }} />;
+	return <div ref={containerRef} className="graph-section" />;
 }

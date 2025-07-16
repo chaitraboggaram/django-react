@@ -31,12 +31,32 @@ function Form({ route, method }) {
 		}
 	};
 
-	return <form onSubmit={handleSubmit} className="form-container">
-		<h1>{name}</h1>
-		<input className="form-input" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-		<input className="form-input" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-		<button className="form-button" type="submit">{name}</button>
-	</form>;
+	return (
+		<form onSubmit={handleSubmit} className="form-container">
+			<h1>{name}</h1>
+			<input
+				className="form-input"
+				type="text"
+				value={username}
+				onChange={(e) => setUsername(e.target.value)}
+				placeholder="Username"
+				required
+				autoComplete="username"
+			/>
+			<input
+				className="form-input"
+				type="password"
+				value={password}
+				onChange={(e) => setPassword(e.target.value)}
+				placeholder="Password"
+				required
+				autoComplete={method === "login" ? "current-password" : "new-password"}
+			/>
+			<button className="form-button" type="submit" disabled={loading}>
+				{loading ? "Loading..." : name}
+			</button>
+		</form>
+	);
 }
 
 export default Form;
