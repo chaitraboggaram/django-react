@@ -142,5 +142,5 @@ export default function CytoscapeGraph({
 		}
 	}, [highlighted]);
 
-	return <div ref={containerRef} className="graph-section" />;
+	return <div ref={containerRef} className="cytoscape-container graph-section" />;
 }

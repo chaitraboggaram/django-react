@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import api from "../api";
 import {
 	useReactTable,
@@ -13,7 +13,7 @@ import "../styles/document_table.css";
 
 const columnHelper = createColumnHelper();
 
-function DocumentList({ documents, onDelete, onUpdate, onCreate, highlighted }) {
+function DocumentList({ documents, onDelete, onUpdate, onCreate, highlighted, setHighlighted }) {
 	const [activeInputRowId, setActiveInputRowId] = useState(null);
 
 	const handleAddClick = (docId) => {
@@ -35,6 +35,7 @@ function DocumentList({ documents, onDelete, onUpdate, onCreate, highlighted }) 
 						onAddClick={() => handleAddClick(doc.id)}
 						showAddButton={true}
 						highlighted={highlighted === doc.id.toString()}
+						setHighlighted={setHighlighted}
 					/>
 					{activeInputRowId === doc.id && (
 						<InputRow
@@ -51,66 +52,27 @@ function DocumentList({ documents, onDelete, onUpdate, onCreate, highlighted }) 
 	);
 }
 
-function DocumentTable() {
-	const [documents, setDocuments] = useState([]);
-	const [highlighted, setHighlighted] = useState(null);
+function DocumentTable({ documents, highlighted, setHighlighted, refreshDocuments }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [sorting, setSorting] = useState([]);
+	const tableRef = useRef(null);
 
 	useEffect(() => {
-		getDocuments();
-	}, []);
+		function handleClickOutside(event) {
+			if (
+				tableRef.current &&
+				!tableRef.current.contains(event.target) &&
+				!event.target.closest(".cytoscape-container")
+			) {
+				setHighlighted(null);
+			}
+		}
 
-	const getDocuments = () => {
-		api
-			.get("/documents/")
-			.then((res) => res.data)
-			.then((data) => {
-				data.sort((a, b) => {
-					const orderA = a.order !== undefined ? a.order : 9999;
-					const orderB = b.order !== undefined ? b.order : 9999;
-					return orderA - orderB;
-				});
-				setDocuments(data);
-			})
-			.catch((err) => alert(err));
-	};
-
-	const deleteDocument = (id) => {
-		api
-			.delete(`/documents/delete/${id}/`)
-			.then((res) => {
-				if (res.status !== 204) alert("Failed to delete document.");
-				getDocuments();
-			})
-			.catch((error) => alert(error));
-	};
-
-	const updateDocument = (id, updatedDoc) => {
-		api
-			.put(`/documents/update/${id}/`, updatedDoc)
-			.then((res) => {
-				if (res.status === 200) {
-					getDocuments();
-				} else {
-					alert("Failed to update document.");
-				}
-			})
-			.catch((err) => alert(err));
-	};
-
-	const createDocument = (newDoc) => {
-		api
-			.post("/documents/", newDoc)
-			.then((res) => {
-				if (res.status === 201) {
-					getDocuments();
-				} else {
-					alert("Failed to make document.");
-				}
-			})
-			.catch((err) => alert(err));
-	};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [setHighlighted]);
 
 	const columns = [
 		columnHelper.accessor("agile_pn", {
@@ -146,6 +108,42 @@ function DocumentTable() {
 		getSortedRowModel: getSortedRowModel(),
 	});
 
+	const deleteDocument = (id) => {
+		api
+			.delete(`/documents/delete/${id}/`)
+			.then((res) => {
+				if (res.status !== 204) alert("Failed to delete document.");
+				refreshDocuments();
+			})
+			.catch((error) => alert(error));
+	};
+
+	const updateDocument = (id, updatedDoc) => {
+		api
+			.put(`/documents/update/${id}/`, updatedDoc)
+			.then((res) => {
+				if (res.status === 200) {
+					refreshDocuments();
+				} else {
+					alert("Failed to update document.");
+				}
+			})
+			.catch((err) => alert(err));
+	};
+
+	const createDocument = (newDoc) => {
+		api
+			.post("/documents/", newDoc)
+			.then((res) => {
+				if (res.status === 201) {
+					refreshDocuments();
+				} else {
+					alert("Failed to make document.");
+				}
+			})
+			.catch((err) => alert(err));
+	};
+
 	return (
 		<div className="filter-container">
 			<div className="filter-box">
@@ -156,53 +154,63 @@ function DocumentTable() {
 					onChange={(e) => setGlobalFilter(e.target.value)}
 				/>
 			</div>
-			<form>
-				<table className="data-table">
-					<thead>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<tr key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<th
-										key={header.id}
-										onClick={header.column.getToggleSortingHandler()}
-									>
-										{flexRender(
-											header.column.columnDef.header,
-											header.getContext()
-										)}
-										{header.column.getIsSorted() === "asc"
-											? " 🔼"
-											: header.column.getIsSorted() === "desc"
-												? " 🔽"
-												: ""}
-									</th>
-								))}
-								<th></th>
-							</tr>
-						))}
-					</thead>
-					<tbody>
-						{documents.length === 0 ? (
-							<InputRow onCreate={createDocument} />
-						) : (
-							<DocumentList
-								documents={documents}
-								onDelete={deleteDocument}
-								onUpdate={updateDocument}
-								onCreate={createDocument}
-								highlighted={highlighted}
-							/>
-						)}
-					</tbody>
-				</table>
-			</form>
+			<div ref={tableRef}>
+				<form>
+					<table className="data-table">
+						<thead>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<tr key={headerGroup.id}>
+									{headerGroup.headers.map((header) => (
+										<th
+											key={header.id}
+											onClick={header.column.getToggleSortingHandler()}
+										>
+											{flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+											)}
+											{header.column.getIsSorted() === "asc"
+												? " 🔼"
+												: header.column.getIsSorted() === "desc"
+													? " 🔽"
+													: ""}
+										</th>
+									))}
+									<th></th>
+								</tr>
+							))}
+						</thead>
+						<tbody>
+							{documents.length === 0 ? (
+								<InputRow onCreate={createDocument} />
+							) : (
+								<DocumentList
+									documents={documents}
+									onDelete={deleteDocument}
+									onUpdate={updateDocument}
+									onCreate={createDocument}
+									highlighted={highlighted}
+									setHighlighted={setHighlighted}
+								/>
+							)}
+						</tbody>
+					</table>
+				</form>
+			</div>
 		</div>
 	);
 }
 
-function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, highlighted }) {
+function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, highlighted, setHighlighted }) {
+	const rowRef = useRef(null);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedDoc, setEditedDoc] = useState({ ...document });
+
+	useEffect(() => {
+		if (highlighted && rowRef.current) {
+			rowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+		}
+	}, [highlighted]);
 
 	const handleChange = (e) => {
 		setEditedDoc({ ...editedDoc, [e.target.name]: e.target.value });
@@ -224,15 +232,16 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 	};
 
 	return (
-		<tr className={highlighted ? "highlighted-row" : ""}>
+		<tr
+			ref={rowRef}
+			className={highlighted ? "highlighted-row" : ""}
+			onClick={() => setHighlighted(document.id.toString())}
+			style={{ cursor: "pointer" }}
+		>
 			{documentFields.map(({ key, className }) => (
 				<td key={key} className={className}>
 					{isEditing ? (
-						<input
-							name={key}
-							value={editedDoc[key] || ""}
-							onChange={handleChange}
-						/>
+						<input name={key} value={editedDoc[key] || ""} onChange={handleChange} />
 					) : (
 						document[key]
 					)}
@@ -312,7 +321,6 @@ function InputRow({ onCreate, onCancel }) {
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-
 		const allFilled = documentFields.every(({ key }) => formData[key].trim() !== "");
 		if (!allFilled) {
 			alert("Please fill in all fields before submitting.");
