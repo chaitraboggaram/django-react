@@ -13,59 +13,22 @@ import "../styles/document_table.css";
 
 const columnHelper = createColumnHelper();
 
-function DocumentList({ documents, onDelete, onUpdate, onCreate, highlighted, setHighlighted }) {
-	const [activeInputRowId, setActiveInputRowId] = useState(null);
-
-	const handleAddClick = (docId) => {
-		setActiveInputRowId(docId === activeInputRowId ? null : docId);
-	};
-
-	const handleCancel = () => {
-		setActiveInputRowId(null);
-	};
-
-	return (
-		<>
-			{documents.map((doc) => (
-				<React.Fragment key={doc.id}>
-					<TableRow
-						document={doc}
-						onDelete={onDelete}
-						onUpdate={onUpdate}
-						onAddClick={() => handleAddClick(doc.id)}
-						showAddButton={true}
-						highlighted={highlighted === doc.id.toString()}
-						setHighlighted={setHighlighted}
-					/>
-					{activeInputRowId === doc.id && (
-						<InputRow
-							onCreate={(newDoc) => {
-								onCreate(newDoc);
-								setActiveInputRowId(null);
-							}}
-							onCancel={handleCancel}
-						/>
-					)}
-				</React.Fragment>
-			))}
-		</>
-	);
-}
-
 function DocumentTable({ documents, highlighted, setHighlighted, refreshDocuments }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [sorting, setSorting] = useState([]);
+	const [activeInputRowId, setActiveInputRowId] = useState(null);
 	const tableRef = useRef(null);
+	const [selectedColumn, setSelectedColumn] = useState("agile_pn");
+	const [columnFilter, setColumnFilter] = useState("");
 
 	useEffect(() => {
 		function handleClickOutside(event) {
-			if (
-				tableRef.current &&
-				!tableRef.current.contains(event.target) &&
-				!event.target.closest(".cytoscape-container")
-			) {
-				setHighlighted(null);
-			}
+			if (tableRef.current?.contains(event.target)) return;
+			const isCyNode = event.target.closest(".cytoscape-container") &&
+				(event.target.matches(".cy-node") || event.target.closest(".cy-node"));
+			if (isCyNode) return;
+			if (event.target.closest(".cytoscape-container")) return;
+			setHighlighted(null);
 		}
 
 		document.addEventListener("mousedown", handleClickOutside);
@@ -144,58 +107,96 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 			.catch((err) => alert(err));
 	};
 
+	const handleAddClick = (docId) => {
+		setActiveInputRowId(docId === activeInputRowId ? null : docId);
+	};
+
+	const handleCancel = () => {
+		setActiveInputRowId(null);
+	};
+
 	return (
 		<div className="filter-container">
 			<div className="filter-box">
+				<select
+					value={selectedColumn}
+					onChange={(e) => setSelectedColumn(e.target.value)}
+				>
+					{columns.map((col) => (
+						<option key={col.id ?? col.accessorKey} value={col.accessorKey}>
+							{typeof col.header === "function" ? col.header() : col.header}
+						</option>
+					))}
+				</select>
 				<input
 					type="text"
-					placeholder="Filter documents..."
-					value={globalFilter ?? ""}
-					onChange={(e) => setGlobalFilter(e.target.value)}
+					placeholder={`Filter by ${selectedColumn}`}
+					value={columnFilter}
+					onChange={(e) => {
+						setColumnFilter(e.target.value);
+						table.getColumn(selectedColumn)?.setFilterValue(e.target.value);
+					}}
 				/>
 			</div>
-			<div ref={tableRef}>
-				<form>
-					<table className="data-table">
-						<thead>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<tr key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<th
-											key={header.id}
-											onClick={header.column.getToggleSortingHandler()}
-										>
-											{flexRender(
-												header.column.columnDef.header,
-												header.getContext()
-											)}
-											{header.column.getIsSorted() === "asc"
-												? " 🔼"
-												: header.column.getIsSorted() === "desc"
-													? " 🔽"
-													: ""}
-										</th>
-									))}
-									<th></th>
-								</tr>
-							))}
-						</thead>
-						<tbody>
-							{documents.length === 0 ? (
-								<InputRow onCreate={createDocument} />
-							) : (
-								<DocumentList
-									documents={documents}
-									onDelete={deleteDocument}
-									onUpdate={updateDocument}
-									onCreate={createDocument}
-									highlighted={highlighted}
-									setHighlighted={setHighlighted}
-								/>
-							)}
-						</tbody>
-					</table>
-				</form>
+
+			<div className="table-section">
+				<table className="data-table">
+					<thead>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<th
+										key={header.id}
+										onClick={header.column.getToggleSortingHandler()}
+									>
+										{flexRender(
+											header.column.columnDef.header,
+											header.getContext()
+										)}
+										{header.column.getIsSorted() === "asc"
+											? " 🔼"
+											: header.column.getIsSorted() === "desc"
+												? " 🔽"
+												: ""}
+									</th>
+								))}
+								<th></th>
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{documents.length === 0 ? (
+							<InputRow onCreate={createDocument} />
+						) : (
+							table.getRowModel().rows.map((row) => {
+								const doc = row.original;
+								return (
+									<React.Fragment key={row.id}>
+										<TableRow
+											document={doc}
+											onDelete={deleteDocument}
+											onUpdate={updateDocument}
+											onAddClick={() => handleAddClick(doc.id)}
+											showAddButton={true}
+											highlighted={highlighted === doc.id.toString()}
+											setHighlighted={setHighlighted}
+										/>
+										{activeInputRowId === doc.id && (
+											<InputRow
+												onCreate={(newDoc) => {
+													createDocument(newDoc);
+													setActiveInputRowId(null);
+												}}
+												onCancel={handleCancel}
+											/>
+										)}
+									</React.Fragment>
+								);
+							})
+						)}
+					</tbody>
+
+				</table>
 			</div>
 		</div>
 	);
