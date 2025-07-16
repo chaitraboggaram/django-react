@@ -43,7 +43,6 @@ function Traces() {
 					highlighted={highlighted}
 					setHighlighted={setHighlighted}
 					refreshDocuments={() => {
-						// Optional: refetch documents if needed
 						api.get("/documents/").then(res => setDocuments(res.data));
 					}}
 				/>

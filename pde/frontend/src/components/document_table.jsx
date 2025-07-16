@@ -46,7 +46,7 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 			header: () => "Agile Rev",
 			cell: (info) => info.getValue(),
 		}),
-		columnHelper.accessor("title", {
+		columnHelper.accessor("doc_title", {
 			header: () => "Document Title",
 			cell: (info) => info.getValue(),
 		}),
@@ -118,7 +118,10 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 	return (
 		<div className="filter-container">
 			<div className="filter-box">
+				<label htmlFor="column-select" className="filter-label">Filter Column:</label>
 				<select
+					id="column-select"
+					className="filter-select"
 					value={selectedColumn}
 					onChange={(e) => setSelectedColumn(e.target.value)}
 				>
@@ -128,7 +131,11 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 						</option>
 					))}
 				</select>
+
+				<label htmlFor="column-filter" className="filter-label">Search:</label>
 				<input
+					id="column-filter"
+					className="filter-input"
 					type="text"
 					placeholder={`Filter by ${selectedColumn}`}
 					value={columnFilter}

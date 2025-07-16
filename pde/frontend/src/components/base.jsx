@@ -1,11 +1,49 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import "../styles/base.css";
 
 function Layout({ children }) {
+	const location = useLocation();
+
+	useEffect(() => {
+		if ('scrollRestoration' in history) {
+			history.scrollRestoration = 'manual';
+		}
+
+		const saveScrollOnClick = () => {
+			localStorage.setItem('scrollPosition', window.scrollY);
+		};
+
+		window.addEventListener('click', saveScrollOnClick);
+
+		return () => {
+			window.removeEventListener('click', saveScrollOnClick);
+		};
+	}, []);
+
+	useEffect(() => {
+		const scrollPos = localStorage.getItem('scrollPosition');
+		if (!scrollPos) return;
+
+		let attempts = 0;
+		const maxAttempts = 20;
+
+		const interval = setInterval(() => {
+			const pageHeight = document.body.scrollHeight;
+
+			if (pageHeight > parseInt(scrollPos) || attempts > maxAttempts) {
+				window.scrollTo(0, parseInt(scrollPos));
+				clearInterval(interval);
+			}
+
+			attempts++;
+		}, 200);
+
+		return () => clearInterval(interval);
+	}, [location]);
+
 	return (
 		<div>
-			{/* Navbar section */}
 			<nav className="navbar">
 				<a href={import.meta.env.BASE_URL}>
 					<img
@@ -16,7 +54,7 @@ function Layout({ children }) {
 				</a>
 				<ul>
 					{/* <li>
-						<a href={import.meta.env.BASE_URL}>
+						<a href={`${import.meta.env.BASE_URL}home/`}>
 							<button type="button" className="btn-dark">Home</button>
 						</a>
 					</li> */}

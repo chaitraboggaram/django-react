@@ -26,7 +26,6 @@ function Home() {
 	return (
 		<Layout>
 			<FileInput onCsvParsed={handleCsvParsed} />
-			<DocumentTable />
 		</Layout>
 	);
 }

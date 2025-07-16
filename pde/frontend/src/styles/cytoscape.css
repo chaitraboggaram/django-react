@@ -17,9 +17,7 @@
 .graph-section {
 	height: 400px;
 	width: 100%;
-	border: 2px solid #ccc;
-	border-radius: 8px;
-	padding: 8px;
+	padding: 12px;
 	box-sizing: border-box;
-	border-bottom: 1px solid #ccc;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
 }
