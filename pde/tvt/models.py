@@ -6,8 +6,10 @@ class Document(models.Model):
     agile_pn = models.CharField(max_length=100)
     agile_rev = models.CharField(max_length=100)
     doc_title = models.CharField(max_length=255)
+    project_id = models.CharField(max_length=100)
     doc_type = models.CharField(max_length=100)
     doc_id = models.CharField(max_length=100)
+    doc_url = models.CharField(max_length=512)
     order = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):

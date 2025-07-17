@@ -105,7 +105,7 @@ export default function CytoscapeGraph({
 		const nodes = docs.map((doc) => ({
 			data: {
 				id: doc.id.toString(),
-				label: doc.title || doc.doc_title || `Doc ${doc.id}`,
+				label: doc.title || doc.doc_id || `Doc ${doc.id}`,
 				doc_type: doc.doc_type || "Unknown",
 			},
 		}));

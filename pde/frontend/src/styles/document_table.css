@@ -198,3 +198,9 @@
 	font-size: 0.8rem;
 	margin-top: 4px;
 }
+
+.or-column {
+	min-width: 40px;
+	color: #888;
+	vertical-align: middle;
+}

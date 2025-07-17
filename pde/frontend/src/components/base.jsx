@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import "../styles/base.css";
+import handleUploadClick from "../pages/file_upload";
 
 function Layout({ children }) {
 	const location = useLocation();
@@ -53,16 +54,11 @@ function Layout({ children }) {
 					/>
 				</a>
 				<ul>
-					{/* <li>
-						<a href={`${import.meta.env.BASE_URL}home/`}>
-							<button type="button" className="btn-dark">Home</button>
-						</a>
-					</li> */}
-					{/* <li>
-						<a href={`${import.meta.env.BASE_URL}traces/`}>
-							<button type="button" className="btn-dark">Traces</button>
-						</a>
-					</li> */}
+					<li>
+						<button className="btn-dark" type="button" onClick={handleUploadClick}>
+							Upload File
+						</button>
+					</li>
 					<li>
 						<a href={`${import.meta.env.BASE_URL}logout/`}>
 							<button type="button" className="btn-dark">Logout</button>

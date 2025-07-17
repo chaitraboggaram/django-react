@@ -9,6 +9,7 @@ import {
 	createColumnHelper,
 } from "@tanstack/react-table";
 import documentFields from "./fields_config";
+import { docURL } from "./fields_config";
 import "../styles/document_table.css";
 
 const columnHelper = createColumnHelper();
@@ -23,14 +24,14 @@ const documentTypeList = [
 	"Executed Protocols",
 ];
 
-const agilePn = "agile_pn";
+const docId = "doc_id";
 
 function DocumentTable({ documents, highlighted, setHighlighted, refreshDocuments }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [sorting, setSorting] = useState([]);
 	const [activeInputRowId, setActiveInputRowId] = useState(null);
 	const tableRef = useRef(null);
-	const [selectedColumn, setSelectedColumn] = useState(agilePn);
+	const [selectedColumn, setSelectedColumn] = useState(docId);
 	const [columnFilter, setColumnFilter] = useState("");
 
 	useEffect(() => {
@@ -78,16 +79,20 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 	};
 
 	const updateDocument = (id, updatedDoc) => {
-		api
-			.put(`/documents/update/${id}/`, updatedDoc)
+		console.log("Updating doc id:", id, "with data:", updatedDoc);
+		api.patch(`/documents/update/${id}/`, updatedDoc)
 			.then((res) => {
+				console.log("Update response:", res);
 				if (res.status === 200) {
 					refreshDocuments();
 				} else {
 					alert("Failed to update document.");
 				}
 			})
-			.catch((err) => alert(err));
+			.catch((err) => {
+				console.error(err);
+				alert("Error updating document");
+			});
 	};
 
 	const createDocument = (newDoc) => {
@@ -143,7 +148,7 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 			</div>
 
 			<div className="table-section">
-				<table className="data-table">
+				<table className="data-table" id="data-table" ref={tableRef}>
 					<thead>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<tr key={headerGroup.id}>
@@ -163,6 +168,7 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 												: ""}
 									</th>
 								))}
+								<th colSpan={3}></th>
 								<th></th>
 							</tr>
 						))}
@@ -198,7 +204,6 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 							})
 						)}
 					</tbody>
-
 				</table>
 			</div>
 		</div>
@@ -253,7 +258,9 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 								onChange={handleChange}
 								className="user-select-input"
 							>
-								<option value="---" disabled>Select Document Type</option>
+								<option value="---" disabled>
+									Select Document Type
+								</option>
 								{documentTypeList.map((type) => (
 									<option key={type} value={type}>
 										{type}
@@ -273,6 +280,9 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 					)}
 				</td>
 			))}
+			<td></td>
+			<td></td>
+			<td></td>
 			<td className="text-center">
 				{isEditing ? (
 					<>
@@ -326,7 +336,7 @@ function TableRow({ document, onDelete, onUpdate, onAddClick, showAddButton, hig
 function InputRow({ onCreate, onCancel }) {
 	const [errors, setErrors] = useState({});
 
-	const initialState = documentFields.reduce((acc, field) => {
+	const initialState = [...documentFields, ...docURL].reduce((acc, field) => {
 		acc[field.key] = "";
 		return acc;
 	}, {});
@@ -340,6 +350,7 @@ function InputRow({ onCreate, onCancel }) {
 
 	const handleClear = () => {
 		setFormData(initialState);
+		setErrors({});
 	};
 
 	const handleCancel = () => {
@@ -347,20 +358,72 @@ function InputRow({ onCreate, onCancel }) {
 		if (onCancel) onCancel();
 	};
 
+	const extractFromURL = (urlStr) => {
+		try {
+			const url = new URL(urlStr);
+			const parts = url.pathname.split("/").filter(Boolean);
+
+			const result = {
+				project_id: null,
+				doc_type: null,
+				doc_id: null,
+			};
+
+			const projectIdx = parts.indexOf("project");
+			if (projectIdx !== -1 && parts.length > projectIdx + 1) {
+				result.project_id = parts[projectIdx + 1];
+			}
+
+			for (let i = 0; i < parts.length; i++) {
+				if (documentTypeList.includes(parts[i])) {
+					result.doc_type = parts[i];
+					if (i + 1 < parts.length) {
+						result.doc_id = parts[i + 1];
+					}
+					break;
+				}
+			}
+
+			return result;
+		} catch {
+			return { project_id: null, doc_type: null, doc_id: null };
+		}
+	};
+
 	const handleSubmit = (e) => {
 		e.preventDefault();
 
 		let newErrors = {};
 
-		documentFields.forEach(({ key }) => {
-			const value = formData[key]?.trim() ?? "";
+		const isDocURLProvided = docURL.some(({ key }) => formData[key]?.trim() !== "");
+		const isDocFieldsProvided = documentFields.some(
+			({ key }) => key !== "doc_type" && formData[key]?.trim() !== ""
+		);
 
-			if (key === "doc_type" && value === "---") {
-				newErrors[key] = "Please select a document type.";
-			} else if (value === "") {
+		if (isDocURLProvided && isDocFieldsProvided) {
+			newErrors["doc_url"] = "Please provide either Document URL or document fields, not both.";
+		} else if (!isDocURLProvided && !isDocFieldsProvided) {
+			newErrors["doc_url"] = "Please fill either Document URL or document fields.";
+			documentFields.forEach(({ key }) => {
 				newErrors[key] = "This field is required.";
-			}
-		});
+			});
+		} else if (isDocFieldsProvided) {
+			documentFields.forEach(({ key }) => {
+				const value = formData[key]?.trim() ?? "";
+				if (key === "doc_type" && value === "---") {
+					newErrors[key] = "Please select a document type.";
+				} else if (value === "") {
+					newErrors[key] = "This field is required.";
+				}
+			});
+		} else if (isDocURLProvided) {
+			docURL.forEach(({ key }) => {
+				const value = formData[key]?.trim() ?? "";
+				if (value === "") {
+					newErrors[key] = "Document URL is required.";
+				}
+			});
+		}
 
 		if (Object.keys(newErrors).length > 0) {
 			setErrors(newErrors);
@@ -368,7 +431,23 @@ function InputRow({ onCreate, onCancel }) {
 		}
 
 		setErrors({});
-		onCreate(formData);
+
+		if (formData.doc_url && formData.doc_url.trim() !== "") {
+			const extracted = extractFromURL(formData.doc_url.trim());
+			if (!extracted.project_id || !extracted.doc_type || !extracted.doc_id) {
+				setErrors({ doc_url: "URL does not contain valid project ID, doc type, or doc ID." });
+				return;
+			}
+			onCreate({
+				...formData,
+				project_id: extracted.project_id,
+				doc_type: extracted.doc_type,
+				doc_id: extracted.doc_id,
+			});
+		} else {
+			onCreate(formData);
+		}
+
 		handleClear();
 		if (onCancel) onCancel();
 	};
@@ -410,6 +489,24 @@ function InputRow({ onCreate, onCancel }) {
 							{errors[key] && <div className="error-message">{errors[key]}</div>}
 						</>
 					)}
+				</td>
+			))}
+
+			<td className="or-column" style={{ fontWeight: "bold", textAlign: "center" }}>OR</td>
+
+			{docURL.map(({ key, label }) => (
+				<td key={key} colSpan={2}>
+					<input
+						type="text"
+						name={key}
+						id={key}
+						placeholder={label}
+						required
+						value={formData[key]}
+						onChange={handleChange}
+						className={`user-text-input ${errors[key] ? "input-error" : ""}`}
+					/>
+					{errors[key] && <div className="error-message">{errors[key]}</div>}
 				</td>
 			))}
 

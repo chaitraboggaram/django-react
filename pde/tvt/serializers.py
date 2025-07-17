@@ -13,8 +13,15 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-
 class DocumentSerializer(serializers.ModelSerializer):
+    agile_pn = serializers.CharField(required=False, allow_blank=True)
+    agile_rev = serializers.CharField(required=False, allow_blank=True)
+    doc_title = serializers.CharField(required=False, allow_blank=True)
+    project_id = serializers.CharField(required=False)
+    doc_type = serializers.CharField(required=False)
+    doc_id = serializers.CharField(required=False)
+    doc_url = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Document
         fields = [
@@ -22,8 +29,10 @@ class DocumentSerializer(serializers.ModelSerializer):
             "agile_pn",
             "agile_rev",
             "doc_title",
+            "project_id",
             "doc_type",
             "doc_id",
+            "doc_url",
             "user",
         ]
         extra_kwargs = {"user": {"read_only": True}}
