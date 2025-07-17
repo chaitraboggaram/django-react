@@ -14,6 +14,8 @@
 
 <br>
 
+---
+
 ## Initial Setup
 ### 1. Set Up a Virtual Environment
 #### On Windows
@@ -53,6 +55,8 @@ python manage.py runserver
 
 <br>
 
+---
+
 ## Frontend Setup
 ### 1. Install Node.js
 Download and install Node.js from:
@@ -78,17 +82,18 @@ npm run dev
 
 <br>
 
+---
+
 ## Accessing the App
-Open your browser and go to:
-[http://localhost:5173/](http://localhost:5173/)
+1. Open your browser and go to: [http://localhost:5173/](http://localhost:5173/)
+2. Fill in your **username** and **password**
+3. Click **Login**
 
 <br>
 
-## User Registration
 ### First-Time Users:
-Visit [http://localhost:5173/register](http://localhost:5173/register)
-→ Enter your username and password to register.
-
-After registration, visiting [http://localhost:5173](http://localhost:5173) will take you directly to the login page.
-
-<br>
+1. Visit [http://localhost:5173](http://localhost:5173)
+2. On the login screen, click the **“Register”** link below the login form
+3. Fill in your **username** and **password**
+4. Click **Register** to create your account
+After successful registration, you'll be redirected back to the login page.
