@@ -24,7 +24,6 @@ function Home() {
 			.catch((err) => alert(err));
 	}, []);
 
-	// Handler when a node in Cytoscape is selected
 	const handleSelect = (nodeId) => {
 		setHighlighted(nodeId);
 	};
@@ -33,7 +32,6 @@ function Home() {
 		<Layout>
 			<div>
 				<CytoscapeGraph
-					documents={documents}
 					highlighted={highlighted}
 					onNodeSelect={handleSelect}
 				/>

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import cytoscape from "cytoscape";
+import api from "../api";
 import "../styles/cytoscape.css";
 
 const space_colors = {
@@ -92,7 +93,6 @@ const document_colors = {
 };
 
 export default function CytoscapeGraph({
-	documents = [],
 	layoutName = "breadthfirst",
 	darkMode = false,
 	highlighted,
@@ -100,22 +100,62 @@ export default function CytoscapeGraph({
 }) {
 	const containerRef = useRef(null);
 	const cyRef = useRef(null);
+	const [documents, setDocuments] = useState([]);
+
+	useEffect(() => {
+		api
+			.get("/documents_with_links/")
+			.then((res) => {
+				const data = res.data;
+				data.sort((a, b) => {
+					const orderA = a.order !== undefined ? a.order : 9999;
+					const orderB = b.order !== undefined ? b.order : 9999;
+					return orderA - orderB;
+				});
+				setDocuments(data);
+			})
+			.catch((err) => alert(err));
+	}, []);
 
 	const buildGraphElements = (docs) => {
+		// Map docs by id as string for quick lookup
+		const docMap = new Map(docs.map((doc) => [doc.id.toString(), doc]));
+
+		// Create nodes for all documents
 		const nodes = docs.map((doc) => ({
 			data: {
 				id: doc.id.toString(),
-				label: doc.title || doc.doc_id || `Doc ${doc.id}`,
+				label: doc.doc_title || doc.doc_id || `Doc ${doc.id}`,
 				doc_type: doc.doc_type || "Unknown",
 			},
 		}));
 
 		const edges = [];
+
+		// Build edges using linked_docs array of objects
+		docs.forEach((doc) => {
+			if (Array.isArray(doc.linked_docs)) {
+				doc.linked_docs.forEach((linkedDoc) => {
+					// Use linkedDoc.id if available, else skip this edge
+					const targetId = linkedDoc.id?.toString();
+					if (targetId && docMap.has(targetId)) {
+						edges.push({
+							data: {
+								id: `${doc.id}-${targetId}`,
+								source: doc.id.toString(),
+								target: targetId,
+							},
+						});
+					}
+				});
+			}
+		});
+
 		return [...nodes, ...edges];
 	};
 
 	useEffect(() => {
-		if (containerRef.current && Array.isArray(documents) && documents.length > 0) {
+		if (containerRef.current && documents.length > 0) {
 			if (cyRef.current) {
 				cyRef.current.destroy();
 				cyRef.current = null;
@@ -139,7 +179,8 @@ export default function CytoscapeGraph({
 							color: darkMode ? "#fff" : "white",
 							"text-valign": "center",
 							"text-halign": "center",
-							"transition-property": "background-color, border-color, width, height, opacity",
+							"transition-property":
+								"background-color, border-color, width, height, opacity",
 							"transition-duration": "0.3s",
 						},
 					},
@@ -177,12 +218,11 @@ export default function CytoscapeGraph({
 				},
 			});
 
-			// Tap on node → highlight it
+			// Node tap handler for highlighting
 			cyRef.current.on("tap", "node", (event) => {
 				event.originalEvent.preventDefault();
 				const nodeId = event.target.id();
 
-				// Highlight selected and dim others
 				cyRef.current.nodes().removeClass("highlighted dimmed");
 				cyRef.current.nodes().forEach((n) => {
 					if (n.id() === nodeId) {
@@ -195,7 +235,7 @@ export default function CytoscapeGraph({
 				onNodeSelect && onNodeSelect(nodeId);
 			});
 
-			// Tap on background → clear highlight
+			// Tap outside nodes clears highlights
 			cyRef.current.on("tap", (event) => {
 				if (event.target === cyRef.current) {
 					cyRef.current.nodes().removeClass("highlighted dimmed");
@@ -205,6 +245,7 @@ export default function CytoscapeGraph({
 		}
 	}, [documents, layoutName, darkMode, onNodeSelect]);
 
+	// Update highlighting on prop change
 	useEffect(() => {
 		if (cyRef.current) {
 			cyRef.current.nodes().removeClass("highlighted dimmed");

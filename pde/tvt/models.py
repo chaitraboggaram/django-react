@@ -11,6 +11,7 @@ class Document(models.Model):
     doc_id = models.CharField(max_length=100)
     doc_url = models.CharField(max_length=512)
     order = models.PositiveIntegerField(null=True, blank=True)
+    linked_documents = models.ManyToManyField('self', symmetrical=False, blank=True)
 
     def __str__(self):
         return self.doc_title

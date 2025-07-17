@@ -1,10 +1,13 @@
-from django.shortcuts import render
+import json
+import os
+from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import generics, status
-from .serializers import UserSerializer, DocumentSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Document
 from rest_framework.response import Response
+from .serializers import UserSerializer, DocumentSerializer
+from .models import Document
+from rest_framework.views import APIView
 
 class DocumentListCreate(generics.ListCreateAPIView):
     serializer_class = DocumentSerializer
@@ -14,7 +17,56 @@ class DocumentListCreate(generics.ListCreateAPIView):
         return Document.objects.filter(user=self.request.user).order_by('order')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        document = serializer.save(user=self.request.user)
+        self.create_linked_documents(document)
+
+    def create_linked_documents(self, main_doc):
+        json_path = os.path.join(settings.BASE_DIR, 'files.json')
+        try:
+            with open(json_path, 'r') as f:
+                files_data = json.load(f)
+        except Exception as e:
+            print(f"Error loading files.json: {e}")
+            return
+
+        matching_entry = next(
+            (entry for entry in files_data if
+             entry.get('project_id') == main_doc.project_id and
+             entry.get('doc_type') == main_doc.doc_type and
+             entry.get('doc_id') == main_doc.doc_id),
+            None
+        )
+        if not matching_entry:
+            print(f"No matching entry in files.json for document {main_doc.doc_id}")
+            return
+
+        linked_docs_to_add = []
+
+        for linked_doc_data in matching_entry.get('linked_docs', []):
+            linked_doc, created = Document.objects.get_or_create(
+                user=main_doc.user,
+                project_id=linked_doc_data.get('project_id'),
+                doc_type=linked_doc_data.get('doc_type'),
+                doc_id=linked_doc_data.get('doc_id'),
+                defaults={
+                    'agile_pn': linked_doc_data.get('agile_pn'),
+                    'agile_rev': linked_doc_data.get('agile_rev'),
+                    'doc_title': linked_doc_data.get('doc_title'),
+                    'doc_url': '',
+                }
+            )
+            if created:
+                print(f"Created linked doc {linked_doc.doc_id}")
+            else:
+                print(f"Linked doc {linked_doc.doc_id} already exists")
+
+            linked_docs_to_add.append(linked_doc)
+
+        if linked_docs_to_add:
+            main_doc.linked_documents.set(linked_docs_to_add)
+            main_doc.save()
+        print("\nMain Doc: ")
+        print(main_doc)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -24,6 +76,35 @@ class DocumentListCreate(generics.ListCreateAPIView):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class DocumentWithLinksList(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        docs = Document.objects.filter(user=user).order_by('order')
+        serializer = DocumentSerializer(docs, many=True)
+        docs_data = serializer.data
+
+        doc_map = {str(doc['id']): doc for doc in docs_data}
+
+        doc_list = []
+        for doc in docs_data:
+            linked_doc_ids = doc.get('linked_documents', [])
+            linked_docs = []
+            for linked_id in linked_doc_ids:
+                linked_doc = doc_map.get(str(linked_id))
+                if linked_doc:
+                    linked_doc_copy = linked_doc.copy()
+                    linked_doc_copy.pop('linked_documents', None)
+                    linked_docs.append(linked_doc_copy)
+
+            doc['linked_docs'] = linked_docs
+            doc.pop('linked_documents', None)
+
+            doc_list.append(doc)
+
+        return Response(doc_list)
 
 class DocumentDelete(generics.DestroyAPIView):
     serializer_class = DocumentSerializer
@@ -38,7 +119,7 @@ class DocumentUpdateView(generics.UpdateAPIView):
     lookup_field = 'id'
 
     def update(self, request, *args, **kwargs):
-        partial = True  # allow partial updates
+        partial = True
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)

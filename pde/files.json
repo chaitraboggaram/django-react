@@ -1,0 +1,28 @@
+[
+	{
+		"project_id": "test",
+		"doc_type": "Risks",
+		"doc_id": "Test Document",
+		"agile_pn": "12345",
+		"agile_rev": "A",
+		"doc_title": "Test Document",
+		"linked_docs": [
+			{
+				"project_id": "test",
+				"doc_type": "Risks",
+				"doc_id": "1234",
+				"agile_pn": "1234",
+				"agile_rev": "D",
+				"doc_title": "Sample Document"
+			},
+			{
+				"project_id": "something",
+				"doc_type": "Risks",
+				"doc_id": "78912",
+				"agile_pn": "78912",
+				"agile_rev": "C",
+				"doc_title": "Sample Document 2"
+			}
+		]
+	}
+]

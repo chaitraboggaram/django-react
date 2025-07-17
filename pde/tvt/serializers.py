@@ -21,6 +21,9 @@ class DocumentSerializer(serializers.ModelSerializer):
     doc_type = serializers.CharField(required=False)
     doc_id = serializers.CharField(required=False)
     doc_url = serializers.CharField(required=False, allow_blank=True)
+    linked_documents = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Document.objects.all(), required=False
+    )
 
     class Meta:
         model = Document
@@ -33,6 +36,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "agile_pn",
             "agile_rev",
             "doc_title",
+            "linked_documents",
             "user",
         ]
         extra_kwargs = {"user": {"read_only": True}}
