@@ -3,6 +3,7 @@ import api from "../api";
 import DocumentTable from "../components/document_table";
 import Layout from "../components/base";
 import CytoscapeGraph from "../components/cytoscape";
+import exportTableToCSV from "../components/table_export";
 
 function Traces() {
 	const [documents, setDocuments] = useState([]);
@@ -46,6 +47,12 @@ function Traces() {
 						api.get("/documents/").then(res => setDocuments(res.data));
 					}}
 				/>
+				<br />
+				<div className="center-class">
+					<button className="btn-dark" onClick={() => exportTableToCSV()}>
+						Export CSV
+					</button>
+				</div>
 			</div>
 		</Layout>
 	);

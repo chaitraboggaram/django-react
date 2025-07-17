@@ -168,7 +168,9 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 												: ""}
 									</th>
 								))}
-								<th colSpan={3}></th>
+								<th></th>
+								<th></th>
+								<th></th>
 								<th></th>
 							</tr>
 						))}

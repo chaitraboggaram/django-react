@@ -26,13 +26,13 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             "id",
-            "agile_pn",
-            "agile_rev",
-            "doc_title",
             "project_id",
             "doc_type",
             "doc_id",
             "doc_url",
+            "agile_pn",
+            "agile_rev",
+            "doc_title",
             "user",
         ]
         extra_kwargs = {"user": {"read_only": True}}

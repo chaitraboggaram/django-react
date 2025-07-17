@@ -9,10 +9,11 @@ const documentFields = [
 
 const docURL = [{ key: "doc_url", label: "Document URL", className: "" }];
 
-const headerMap = documentFields.reduce((map, field) => {
-	map[field.label] = field.key;
-	return map;
-}, {});
+const headerMap = {
+	"Project ID": "project_id",
+	"Document Type": "doc_type",
+	"Document ID": "doc_id"
+};
 
 export { documentFields, headerMap };
 export { docURL };
