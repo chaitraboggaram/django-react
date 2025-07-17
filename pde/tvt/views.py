@@ -19,6 +19,30 @@ class DocumentListCreate(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         document = serializer.save(user=self.request.user)
         self.create_linked_documents(document)
+        updated_document = Document.objects.select_related().prefetch_related('linked_documents').get(id=document.id)
+
+        print("\n--- Created Document (Full DB Row) ---")
+        print({
+            "id": updated_document.id,
+            "project_id": updated_document.project_id,
+            "doc_type": updated_document.doc_type,
+            "doc_id": updated_document.doc_id,
+            "doc_title": updated_document.doc_title,
+            "agile_pn": updated_document.agile_pn,
+            "agile_rev": updated_document.agile_rev,
+            "doc_url": updated_document.doc_url,
+            "order": updated_document.order,
+            "count": updated_document.count,
+            "linked_docs": [
+                {
+                    "id": doc.id,
+                    "doc_type": doc.doc_type,
+                    "doc_id": doc.doc_id,
+                    "doc_title": doc.doc_title
+                }
+                for doc in updated_document.linked_documents.all()
+            ]
+        })
 
     def create_linked_documents(self, main_doc):
         json_path = os.path.join(settings.BASE_DIR, 'files.json')
@@ -103,7 +127,8 @@ class DocumentWithLinksList(APIView):
             doc.pop('linked_documents', None)
 
             doc_list.append(doc)
-
+        print("\nDocument List: ")
+        print(doc_list)
         return Response(doc_list)
 
 class DocumentDelete(generics.DestroyAPIView):
@@ -125,6 +150,17 @@ class DocumentUpdateView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+class DeleteAllDocumentsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        deleted_count, _ = Document.objects.filter(user=user).delete()
+        return Response(
+            {"message": f"{deleted_count} documents deleted."},
+            status=status.HTTP_200_OK
+        )
 
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()

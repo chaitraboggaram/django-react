@@ -130,6 +130,20 @@ function Layout({ children }) {
 		reader.readAsText(file);
 	};
 
+	const deleteAllDocuments = async () => {
+		const confirmed = window.confirm("Are you sure you want to reset the form.");
+
+		if (!confirmed) return;
+
+		try {
+			const response = await api.delete("/delete_all_documents/");
+			window.location.reload();
+		} catch (error) {
+			console.error("Failed to delete documents", error);
+			alert("Error while resetting try again!.");
+		}
+	};
+
 	return (
 		<div>
 			<nav className="navbar">
@@ -152,6 +166,12 @@ function Layout({ children }) {
 							style={{ display: 'none' }}
 							onChange={handleFileChange}
 						/>
+					</li>
+					&nbsp;&nbsp;
+					<li>
+						<button className="btn-dark" type="button" onClick={deleteAllDocuments}>
+							Reset
+						</button>
 					</li>
 					<li>
 						<a href={`${import.meta.env.BASE_URL}logout/`}>

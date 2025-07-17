@@ -106,6 +106,7 @@ function DocumentTable({ documents, highlighted, setHighlighted, refreshDocument
 				}
 			})
 			.catch((err) => alert(err));
+		window.location.reload();
 	};
 
 	const handleAddClick = (docId) => {
