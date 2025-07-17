@@ -363,7 +363,8 @@ function InputRow({ onCreate, onCancel }) {
 	const extractFromURL = (urlStr) => {
 		try {
 			const url = new URL(urlStr);
-			const parts = url.pathname.split("/").filter(Boolean);
+			const hashPath = url.hash.replace(/^#\/?/, "");
+			const parts = hashPath.split("/").filter(Boolean);
 
 			const result = {
 				project_id: null,
@@ -380,7 +381,7 @@ function InputRow({ onCreate, onCancel }) {
 				if (documentTypeList.includes(parts[i])) {
 					result.doc_type = parts[i];
 					if (i + 1 < parts.length) {
-						result.doc_id = parts[i + 1];
+						result.doc_id = decodeURIComponent(parts[i + 1]);
 					}
 					break;
 				}
