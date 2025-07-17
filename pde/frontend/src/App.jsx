@@ -3,9 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import NotFound from "./pages/not_found";
-import Home from "./pages/home";
 import ProtectedRoute from "./components/protected_route";
-import Traces from "./pages/traces";
+import Home from "./pages/home";
 
 function Logout() {
 	localStorage.clear();
@@ -25,17 +24,13 @@ function App() {
 					path="/"
 					element={
 						<ProtectedRoute>
-							<Traces />				{/*  You cannot access home until you have successfully authenticated */}
+							<Home />				{/*  You cannot access home until you have successfully authenticated */}
 						</ProtectedRoute>
 					}
 				/>
 				<Route path="/login" element={<Login />} />			{/*  No authentication is required to access these */}
 				<Route path="/logout" element={<Logout />} />
 				<Route path="/register" element={<Register />} />
-				<Route path="/home" element={
-					<ProtectedRoute>
-						<Home />
-					</ProtectedRoute>} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</BrowserRouter>

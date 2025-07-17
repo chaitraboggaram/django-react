@@ -1,31 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api";
 import DocumentTable from "../components/document_table";
-import FileInput from "../components/file_input";
 import Layout from "../components/base";
-import "../styles/home.css";
+import CytoscapeGraph from "../components/cytoscape";
+import exportTableToCSV from "../components/table_export";
 
 function Home() {
-	// We don't need csvDocuments state anymore
-	// Just upload CSV and reload backend documents
+	const [documents, setDocuments] = useState([]);
+	const [highlighted, setHighlighted] = useState(null);
 
-	const handleCsvParsed = async (docsFromCsv) => {
-		try {
-			// Upload each document with order field
-			for (let i = 0; i < docsFromCsv.length; i++) {
-				const docWithOrder = { ...docsFromCsv[i], order: i };
-				await api.post("/documents/", docWithOrder);
-			}
-			// After upload, reload the page or update state to refresh DocumentTable
-			window.location.reload();
-		} catch (err) {
-			console.error("Error uploading CSV documents:", err);
-		}
+	useEffect(() => {
+		api
+			.get("/documents/")
+			.then((res) => {
+				const data = res.data;
+				data.sort((a, b) => {
+					const orderA = a.order !== undefined ? a.order : 9999;
+					const orderB = b.order !== undefined ? b.order : 9999;
+					return orderA - orderB;
+				});
+				setDocuments(data);
+			})
+			.catch((err) => alert(err));
+	}, []);
+
+	// Handler when a node in Cytoscape is selected
+	const handleSelect = (nodeId) => {
+		setHighlighted(nodeId);
 	};
 
 	return (
 		<Layout>
-			<FileInput onCsvParsed={handleCsvParsed} />
+			<div>
+				<CytoscapeGraph
+					documents={documents}
+					highlighted={highlighted}
+					onNodeSelect={handleSelect}
+				/>
+				{/* Pass documents and highlighted to DocumentTable so it can highlight & update properly */}
+				<br />
+				<DocumentTable
+					documents={documents}
+					highlighted={highlighted}
+					setHighlighted={setHighlighted}
+					refreshDocuments={() => {
+						api.get("/documents/").then(res => setDocuments(res.data));
+					}}
+				/>
+				<br />
+				<div className="center-class">
+					<button className="btn-dark" onClick={() => exportTableToCSV()}>
+						Export CSV
+					</button>
+				</div>
+			</div>
 		</Layout>
 	);
 }
