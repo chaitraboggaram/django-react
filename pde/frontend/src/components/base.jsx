@@ -41,6 +41,9 @@ function Layout({ children }) {
 
 	const handleCsvParsed = async (docsFromCsv) => {
 		try {
+			await api.delete("/delete_all_documents/");
+			console.log("All existing documents deleted.");
+
 			for (let i = 0; i < docsFromCsv.length; i++) {
 				const docWithOrder = { ...docsFromCsv[i], order: i };
 
@@ -54,14 +57,16 @@ function Layout({ children }) {
 					continue;
 				}
 
-				console.log(`Sending document ${i + 1} data:`, cleanDoc);
+				console.log(`Uploading document ${i + 1}:`, cleanDoc);
 				const response = await api.post("/documents/", cleanDoc);
-				console.log(`✅ Uploaded document ${i + 1}:`, response.data);
+				console.log(`Uploaded document ${i + 1}:`, response.data);
 			}
-			alert("✅ All documents uploaded successfully!");
+
+			alert("Documents reset and uploaded successfully!");
 			window.location.reload();
+
 		} catch (err) {
-			console.error("❌ Error uploading CSV documents:", err);
+			console.error("❌ Error during document reset/upload:", err);
 			alert("❌ Upload failed. Check console for details.");
 		}
 	};
@@ -154,6 +159,9 @@ function Layout({ children }) {
 						className="logo"
 					/>
 				</a>
+
+				<div className="my-title">Trace Visualization Tool</div>
+
 				<ul>
 					<li>
 						<button className="btn-dark" type="button" onClick={handleUploadClick}>

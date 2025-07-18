@@ -50,7 +50,7 @@ function Form({ route, method }) {
 				onChange={(e) => setPassword(e.target.value)}
 				placeholder="Password"
 				required
-				autoComplete={method === "login" ? "current-password" : "new-password"}
+				autoComplete="password"
 			/>
 			<button className="form-button" type="submit" disabled={loading}>
 				{loading ? "Loading..." : name}
