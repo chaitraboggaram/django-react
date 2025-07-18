@@ -25,6 +25,9 @@ stat:
 django:
 	cd pde && python manage.py runserver
 
+shell:
+	cd pde && python manage.py shell
+
 # Run react server
 react:
 	cd pde && cd frontend && npm run dev

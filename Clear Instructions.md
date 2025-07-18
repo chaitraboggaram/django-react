@@ -1090,3 +1090,28 @@ export default Home;
 python manage.py makemigrations
 python manage.py migrate
 ```
+
+<br>
+
+## List all duplicate documents for a user
+run python manage.py shell and paste below
+```bash
+from django.db.models import Count
+from tvt.models import Document
+
+duplicates = Document.objects.values('user', 'project_id', 'doc_type', 'doc_id')\
+    .annotate(dupe_count=Count('id')).filter(dupe_count__gt=1)
+
+for dup in duplicates:
+    print(dup)
+```
+You can also see the id of the user who has duplicate docs
+
+Delete all orphan docs of user
+```bash
+from tvt.models import Document
+count_orphan_docs = Document.objects.filter(user_id=6).count()
+print(f"Documents to delete: {count_orphan_docs}")
+Document.objects.filter(user_id=6).delete()
+print("Deleted all documents with user_id=6.")
+```
